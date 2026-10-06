@@ -100,6 +100,7 @@ export default function App() {
       );
       if (controls.length === 0) throw new Error('No addressable content controls were found.');
 
+      const historyBeforeOperation = await doc.history.get();
       for (const control of controls) {
         const result = await doc.contentControls.setLockMode({ target: control.target, lockMode: 'unlocked' });
         const failure = failureMessage(result);
@@ -117,7 +118,8 @@ export default function App() {
       }
       const historyAfterOperation = await doc.history.get();
       const undoDepthAfterOperation = historyAfterOperation.undoDepth;
-      undoCoordinator.arm(undoDepthAfterOperation, 3);
+      const historyCount = undoDepthAfterOperation - historyBeforeOperation.undoDepth;
+      undoCoordinator.arm(undoDepthAfterOperation, historyCount);
       redoCoordinator.disarm();
       setStatus(
         `Updated ${controls.length} content control${controls.length === 1 ? '' : 's'} and armed grouped undo.`,
